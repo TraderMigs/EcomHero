@@ -33,10 +33,8 @@ export async function POST(req: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
-    // Get customer email
     const customerEmail = session.customer_details?.email || ''
 
-    // Upsert customer
     let customerId: string | null = null
     if (customerEmail) {
       const { data: customer } = await supabase
@@ -51,10 +49,8 @@ export async function POST(req: NextRequest) {
       customerId = customer?.id || null
     }
 
-    // Generate order number
     const orderNumber = `EH-${Date.now().toString().slice(-6)}`
 
-    // Create order
     await supabase.from('orders').insert({
       order_number: orderNumber,
       customer_id: customerId,
@@ -84,12 +80,16 @@ export async function POST(req: NextRequest) {
       currency: session.currency?.toUpperCase() || 'USD',
     })
 
-    // Update customer totals
+    // Update customer totals — non-critical, wrapped in try/catch
     if (customerId) {
-      await supabase.rpc('increment_customer_stats', {
-        cid: customerId,
-        amount: (session.amount_total || 0) / 100,
-      }).catch(() => {}) // non-critical
+      try {
+        await supabase.rpc('increment_customer_stats', {
+          cid: customerId,
+          amount: (session.amount_total || 0) / 100,
+        })
+      } catch {
+        // non-critical, ignore
+      }
     }
   }
 
