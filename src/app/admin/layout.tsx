@@ -1,21 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let settings = null
 
-  // Allow onboarding without auth
-  // For admin routes beyond onboarding, check auth
-  if (!user) {
-    redirect('/admin/login')
+  try {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      const { data } = await supabase
+        .from('store_settings')
+        .select('store_name,logo_url,onboarding_complete')
+        .single()
+      settings = data
+    } else {
+      // No user — render children only (login/onboarding pages handle their own UI)
+      return <>{children}</>
+    }
+  } catch {
+    return <>{children}</>
   }
-
-  const { data: settings } = await supabase
-    .from('store_settings')
-    .select('store_name,logo_url,onboarding_complete')
-    .single()
 
   return (
     <div className="flex min-h-screen bg-gray-100">
