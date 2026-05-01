@@ -8,8 +8,34 @@ interface Props { settings: StoreSettings | null }
 
 const ACCENT_PRESETS = ['#ff4500','#e11d48','#7c3aed','#2563eb','#059669','#d97706','#000000','#64748b']
 
+type SettingsFormData = {
+  store_name: string
+  tagline: string
+  primary_color: string
+  secondary_color: string
+  accent_color: string
+  contact_email: string
+  support_email: string
+  social_instagram: string
+  social_tiktok: string
+  social_facebook: string
+  meta_title: string
+  meta_description: string
+  footer_text: string
+  announcement_bar: string
+  announcement_bar_active: boolean
+  store_type: string
+  stripe_publishable_key: string
+  new_stripe_secret: string
+  new_webhook_secret: string
+}
+
+type StringSettingsKeys = {
+  [K in keyof SettingsFormData]: SettingsFormData[K] extends string ? K : never
+}[keyof SettingsFormData]
+
 export default function AdminSettingsForm({ settings }: Props) {
-  const [data, setData] = useState({
+  const [data, setData] = useState<SettingsFormData>({
     store_name: settings?.store_name || '',
     tagline: settings?.tagline || '',
     primary_color: settings?.primary_color || '#000000',
@@ -31,7 +57,7 @@ export default function AdminSettingsForm({ settings }: Props) {
     new_webhook_secret: '',
   })
   const [saving, setSaving] = useState(false)
-  const set = (k: string, v: string | boolean) => setData(d => ({ ...d, [k]: v }))
+  const set = (k: keyof SettingsFormData, v: string | boolean) => setData(d => ({ ...d, [k]: v }))
 
   const save = async () => {
     setSaving(true)
@@ -63,8 +89,8 @@ export default function AdminSettingsForm({ settings }: Props) {
     </div>
   )
 
-  const Input = ({ k, type = 'text', placeholder = '' }: { k: string; type?: string; placeholder?: string }) => (
-    <input type={type} value={(data as Record<string, string>)[k]} onChange={e => set(k, e.target.value)}
+  const Input = ({ k, type = 'text', placeholder = '' }: { k: StringSettingsKeys; type?: string; placeholder?: string }) => (
+    <input type={type} value={data[k] || ''} onChange={e => set(k, e.target.value)}
       placeholder={placeholder}
       className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10" />
   )
