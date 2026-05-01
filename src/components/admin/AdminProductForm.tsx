@@ -11,13 +11,43 @@ interface Props {
   pages: { id: string; title: string; slug: string }[]
 }
 
+type ProductFormData = {
+  name: string
+  slug: string
+  description: string
+  short_description: string
+  price: string
+  compare_at_price: string
+  cost_per_item: string
+  sku: string
+  track_inventory: boolean
+  inventory_quantity: string
+  is_active: boolean
+  is_featured: boolean
+  category: string
+  tags: string
+  requires_shipping: boolean
+  taxable: boolean
+  page_id: string
+  seo_title: string
+  seo_description: string
+}
+
+type StringKeys = {
+  [K in keyof ProductFormData]: ProductFormData[K] extends string ? K : never
+}[keyof ProductFormData]
+
+type BooleanKeys = {
+  [K in keyof ProductFormData]: ProductFormData[K] extends boolean ? K : never
+}[keyof ProductFormData]
+
 export default function AdminProductForm({ product, pages }: Props) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  const [data, setData] = useState({
+  const [data, setData] = useState<ProductFormData>({
     name: product?.name || '',
     slug: product?.slug || '',
     description: product?.description || '',
@@ -42,7 +72,7 @@ export default function AdminProductForm({ product, pages }: Props) {
   const [images, setImages] = useState<ProductImage[]>(product?.images || [])
   const [variants, setVariants] = useState<Partial<ProductVariant>[]>(product?.product_variants || [])
 
-  const set = (k: string, v: string | boolean) => setData(d => ({ ...d, [k]: v }))
+  const set = (k: keyof ProductFormData, v: string | boolean) => setData(d => ({ ...d, [k]: v }))
 
   const autoSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -120,18 +150,25 @@ export default function AdminProductForm({ product, pages }: Props) {
     </div>
   )
 
-  const Field = ({ label, children, half }: { label: string; children: React.ReactNode; half?: boolean }) => (
-    <div className={half ? '' : ''}>
+  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div>
       <label className="text-xs font-semibold uppercase tracking-widest text-gray-400 block mb-1.5">{label}</label>
       {children}
     </div>
   )
 
-  const Input = ({ k, type = 'text', placeholder = '' }: { k: string; type?: string; placeholder?: string }) => (
-    <input type={type} value={(data as Record<string, string>)[k] || ''} onChange={e => set(k, e.target.value)}
+  const Input = ({ k, type = 'text', placeholder = '' }: { k: StringKeys; type?: string; placeholder?: string }) => (
+    <input type={type} value={data[k] || ''} onChange={e => set(k, e.target.value)}
       placeholder={placeholder}
       className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10" />
   )
+
+  const boolKeys: { k: BooleanKeys; label: string }[] = [
+    { k: 'is_active', label: 'Active (visible in store)' },
+    { k: 'is_featured', label: 'Featured product' },
+    { k: 'requires_shipping', label: 'Requires shipping' },
+    { k: 'taxable', label: 'Charge tax' },
+  ]
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
@@ -238,14 +275,9 @@ export default function AdminProductForm({ product, pages }: Props) {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
           <h2 className="font-semibold text-sm">Status</h2>
           <div className="flex flex-col gap-3">
-            {[
-              { k: 'is_active', label: 'Active (visible in store)' },
-              { k: 'is_featured', label: 'Featured product' },
-              { k: 'requires_shipping', label: 'Requires shipping' },
-              { k: 'taxable', label: 'Charge tax' },
-            ].map(item => (
+            {boolKeys.map(item => (
               <label key={item.k} className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={!!(data as Record<string, boolean>)[item.k]}
+                <input type="checkbox" checked={data[item.k]}
                   onChange={e => set(item.k, e.target.checked)}
                   className="w-4 h-4 rounded" />
                 <span className="text-sm">{item.label}</span>
