@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Never touch these — no auth check, no redirect
+  // Never auth-check these
   const alwaysPublic = [
     '/admin/login',
     '/admin/onboarding',
@@ -15,17 +15,12 @@ export async function middleware(request: NextRequest) {
     '/_next/',
     '/favicon',
   ]
-
   const isAlwaysPublic = alwaysPublic.some(p => pathname.startsWith(p)) || pathname === '/'
+  if (isAlwaysPublic) return supabaseResponse
 
-  if (isAlwaysPublic) {
-    return supabaseResponse
-  }
-
-  // Only run auth check for admin routes
-  if (!pathname.startsWith('/admin')) {
-    return supabaseResponse
-  }
+  // Only run auth check for admin and account routes
+  const needsAuth = pathname.startsWith('/admin') || pathname.startsWith('/account')
+  if (!needsAuth) return supabaseResponse
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,8 +33,7 @@ export async function middleware(request: NextRequest) {
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(
-              name,
-              value,
+              name, value,
               options as Parameters<typeof supabaseResponse.cookies.set>[2]
             )
           )
@@ -51,7 +45,12 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.redirect(new URL('/admin/login', request.url))
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+    if (pathname.startsWith('/account')) {
+      return NextResponse.redirect(new URL('/?auth=login', request.url))
+    }
   }
 
   return supabaseResponse
