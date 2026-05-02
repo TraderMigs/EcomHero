@@ -251,9 +251,9 @@ function PreviewSlideshow({ data, colors }: { data: Record<string, unknown>; col
       }
       <div className="relative z-10 flex items-center justify-center h-full px-8 py-16 text-center">
         <div>
-          {slide.heading && <h2 className="text-3xl font-bold text-white mb-3">{s(slide.heading)}</h2>}
-          {slide.subheading && <p className="text-base text-white/80 mb-5">{s(slide.subheading)}</p>}
-          {slide.cta_text && <span className="inline-block px-5 py-2 text-xs font-bold text-white rounded" style={{ background: colors.accent }}>{s(slide.cta_text)}</span>}
+          {s(slide.heading) && <h2 className="text-3xl font-bold text-white mb-3">{s(slide.heading)}</h2>}
+          {s(slide.subheading) && <p className="text-base text-white/80 mb-5">{s(slide.subheading)}</p>}
+          {s(slide.cta_text) && <span className="inline-block px-5 py-2 text-xs font-bold text-white rounded" style={{ background: colors.accent }}>{s(slide.cta_text)}</span>}
         </div>
       </div>
       {slides.length > 1 && (
