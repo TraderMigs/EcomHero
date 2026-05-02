@@ -208,6 +208,14 @@ export default function AdminProductForm({ product, pages }: Props) {
             <p className="text-xs py-2" style={{ color: palette.textMuted }}>No variants — single price product.</p>
           ) : (
             <div className="flex flex-col gap-2 mb-3">
+              {/* Column headers */}
+              <div className="flex items-center gap-2 px-2.5">
+                <div className="w-3 shrink-0" />
+                <p className="flex-1 text-xs font-semibold uppercase tracking-widest" style={{ color: palette.textDim }}>Name</p>
+                <p className="w-20 text-xs font-semibold uppercase tracking-widest" style={{ color: palette.textDim }}>Price</p>
+                <p className="w-16 text-xs font-semibold uppercase tracking-widest" style={{ color: palette.textDim }}>Qty</p>
+                <div className="w-4 shrink-0" />
+              </div>
               {variants.map(v => (
                 <div key={v.id} className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: palette.bg }}>
                   <GripVertical size={12} style={{ color: palette.textDim }} />
@@ -217,6 +225,9 @@ export default function AdminProductForm({ product, pages }: Props) {
                     style={{ background: palette.surface, borderColor: palette.border, color: palette.text }} />
                   <input type="number" value={v.price || ''} onChange={e => setVariants(p => p.map(x => x.id === v.id ? { ...x, price: parseFloat(e.target.value) } : x))}
                     placeholder="Price" className="w-20 px-2.5 py-1.5 rounded text-xs border outline-none"
+                    style={{ background: palette.surface, borderColor: palette.border, color: palette.text }} />
+                  <input type="number" value={v.inventory_quantity ?? ''} onChange={e => setVariants(p => p.map(x => x.id === v.id ? { ...x, inventory_quantity: parseInt(e.target.value) || 0 } : x))}
+                    placeholder="Qty" className="w-16 px-2.5 py-1.5 rounded text-xs border outline-none"
                     style={{ background: palette.surface, borderColor: palette.border, color: palette.text }} />
                   <button onClick={() => setVariants(p => p.filter(x => x.id !== v.id))}
                     style={{ color: palette.danger }}><Trash2 size={12} /></button>
