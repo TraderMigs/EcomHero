@@ -39,8 +39,13 @@ export default function StorePreview({ settings, pages, products }: Props) {
       <div className="sticky top-0 z-40 border-b px-4 h-12 flex items-center justify-between"
         style={{ background: secondary, borderColor: `${primary}15` }}>
         <button onClick={() => setActivePage('home')}
-          className="font-bold text-base" style={{ color: primary }}>
-          {storeName}
+          className="font-bold text-base shrink-0" style={{ color: primary }}>
+          {settings?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={settings.logo_url} alt={storeName} className="h-7 object-contain max-w-[120px]" />
+          ) : (
+            storeName
+          )}
         </button>
         <nav className="hidden md:flex items-center gap-5">
           {navPages.map(p => (
@@ -118,9 +123,14 @@ function EmptyPagePreview({ page, settings, products, colors }: {
         <div className="relative flex items-center justify-center py-24 px-8 text-center"
           style={{ background: `linear-gradient(135deg, ${colors.primary}ee, ${colors.primary}99)` }}>
           <div>
-            <h1 className="text-4xl font-bold mb-3" style={{ color: colors.secondary }}>
-              {settings?.store_name || 'Your Store Name'}
-            </h1>
+            {settings?.logo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={settings.logo_url} alt="" className="h-14 object-contain mx-auto mb-4" />
+            ) : (
+              <h1 className="text-4xl font-bold mb-3" style={{ color: colors.secondary }}>
+                {settings?.store_name || 'Your Store Name'}
+              </h1>
+            )}
             <p className="text-base opacity-70 mb-6" style={{ color: colors.secondary }}>
               {settings?.tagline || 'Your tagline goes here'}
             </p>
