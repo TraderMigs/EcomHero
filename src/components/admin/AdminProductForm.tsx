@@ -3,341 +3,274 @@ import { useState, useCallback } from 'react'
 import { Product, ProductVariant, ProductImage } from '@/types'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import { Loader2, Save, Trash2, Plus, X, Upload, GripVertical } from 'lucide-react'
+import { Upload, Plus, Trash2, X, GripVertical, Save, Loader2 } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
+import {
+  AdminPage, AdminPageHeader, AdminCard, AdminField, AdminInput,
+  AdminTextarea, AdminSelect, AdminToggle, AdminButton, AdminBackLink,
+  AdminDivider, palette
+} from '@/components/ui/AdminUI'
+
+type ProductFormData = {
+  name: string; slug: string; description: string; short_description: string
+  price: string; compare_at_price: string; cost_per_item: string; sku: string
+  track_inventory: boolean; inventory_quantity: string; is_active: boolean
+  is_featured: boolean; category: string; tags: string; requires_shipping: boolean
+  taxable: boolean; page_id: string; seo_title: string; seo_description: string
+}
+
+type StringKeys = { [K in keyof ProductFormData]: ProductFormData[K] extends string ? K : never }[keyof ProductFormData]
+type BoolKeys = { [K in keyof ProductFormData]: ProductFormData[K] extends boolean ? K : never }[keyof ProductFormData]
 
 interface Props {
   product: (Product & { product_variants?: ProductVariant[] }) | null
   pages: { id: string; title: string; slug: string }[]
 }
 
-type ProductFormData = {
-  name: string
-  slug: string
-  description: string
-  short_description: string
-  price: string
-  compare_at_price: string
-  cost_per_item: string
-  sku: string
-  track_inventory: boolean
-  inventory_quantity: string
-  is_active: boolean
-  is_featured: boolean
-  category: string
-  tags: string
-  requires_shipping: boolean
-  taxable: boolean
-  page_id: string
-  seo_title: string
-  seo_description: string
-}
-
-type StringKeys = {
-  [K in keyof ProductFormData]: ProductFormData[K] extends string ? K : never
-}[keyof ProductFormData]
-
-type BooleanKeys = {
-  [K in keyof ProductFormData]: ProductFormData[K] extends boolean ? K : never
-}[keyof ProductFormData]
-
 export default function AdminProductForm({ product, pages }: Props) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
   const [data, setData] = useState<ProductFormData>({
-    name: product?.name || '',
-    slug: product?.slug || '',
-    description: product?.description || '',
-    short_description: product?.short_description || '',
-    price: product?.price?.toString() || '',
-    compare_at_price: product?.compare_at_price?.toString() || '',
-    cost_per_item: product?.cost_per_item?.toString() || '',
-    sku: product?.sku || '',
-    track_inventory: product?.track_inventory || false,
-    inventory_quantity: product?.inventory_quantity?.toString() || '0',
-    is_active: product?.is_active ?? true,
-    is_featured: product?.is_featured || false,
-    category: product?.category || '',
-    tags: product?.tags?.join(', ') || '',
-    requires_shipping: product?.requires_shipping ?? true,
-    taxable: product?.taxable ?? true,
-    page_id: product?.page_id || '',
-    seo_title: product?.seo_title || '',
-    seo_description: product?.seo_description || '',
+    name: product?.name || '', slug: product?.slug || '',
+    description: product?.description || '', short_description: product?.short_description || '',
+    price: product?.price?.toString() || '', compare_at_price: product?.compare_at_price?.toString() || '',
+    cost_per_item: product?.cost_per_item?.toString() || '', sku: product?.sku || '',
+    track_inventory: product?.track_inventory || false, inventory_quantity: product?.inventory_quantity?.toString() || '0',
+    is_active: product?.is_active ?? true, is_featured: product?.is_featured || false,
+    category: product?.category || '', tags: product?.tags?.join(', ') || '',
+    requires_shipping: product?.requires_shipping ?? true, taxable: product?.taxable ?? true,
+    page_id: product?.page_id || '', seo_title: product?.seo_title || '', seo_description: product?.seo_description || '',
   })
-
   const [images, setImages] = useState<ProductImage[]>(product?.images || [])
   const [variants, setVariants] = useState<Partial<ProductVariant>[]>(product?.product_variants || [])
 
   const set = (k: keyof ProductFormData, v: string | boolean) => setData(d => ({ ...d, [k]: v }))
-
-  const autoSlug = (name: string) =>
-    name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  const autoSlug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
   const onDrop = useCallback(async (files: File[]) => {
     setUploading(true)
     for (const file of files) {
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+        const fd = new FormData(); fd.append('file', file)
+        const res = await fetch('/api/upload', { method: 'POST', body: fd })
         const { url } = await res.json()
-        if (url) {
-          setImages(prev => [...prev, { id: crypto.randomUUID(), url, alt: file.name, sort_order: prev.length }])
-        }
-      } catch { toast.error(`Failed to upload ${file.name}`) }
+        if (url) setImages(prev => [...prev, { id: crypto.randomUUID(), url, alt: file.name, sort_order: prev.length }])
+      } catch { toast.error(`Failed: ${file.name}`) }
     }
     setUploading(false)
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop, accept: { 'image/*': [] }, multiple: true
-  })
-
-  const removeImage = (id: string) => setImages(prev => prev.filter(i => i.id !== id))
-
-  const addVariant = () => setVariants(prev => [...prev, { id: crypto.randomUUID(), name: '', price: undefined, sku: '', inventory_quantity: 0, is_active: true, sort_order: prev.length }])
-  const updateVariant = (id: string, k: string, v: string | boolean | number) =>
-    setVariants(prev => prev.map(v2 => v2.id === id ? { ...v2, [k]: v } : v2))
-  const removeVariant = (id: string) => setVariants(prev => prev.filter(v2 => v2.id !== id))
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, multiple: true })
 
   const save = async () => {
-    if (!data.name || !data.price) return toast.error('Name and price are required')
+    if (!data.name || !data.price) return toast.error('Name and price required')
     setSaving(true)
     try {
       const payload = {
-        ...data,
-        slug: data.slug || autoSlug(data.name),
+        ...data, slug: data.slug || autoSlug(data.name),
         price: parseFloat(data.price),
         compare_at_price: data.compare_at_price ? parseFloat(data.compare_at_price) : null,
         cost_per_item: data.cost_per_item ? parseFloat(data.cost_per_item) : null,
         inventory_quantity: parseInt(data.inventory_quantity) || 0,
         tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        images,
-        variants,
-        page_id: data.page_id || null,
+        images, variants, page_id: data.page_id || null,
       }
       const url = product ? `/api/products/${product.id}` : '/api/products'
-      const method = product ? 'PUT' : 'POST'
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const res = await fetch(url, { method: product ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const result = await res.json()
       if (result.product) {
-        toast.success(product ? 'Product updated!' : 'Product created!')
+        toast.success(product ? 'Updated!' : 'Created!')
         if (!product) router.push(`/admin/products/${result.product.id}`)
       } else throw new Error(result.error)
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to save')
-    } finally { setSaving(false) }
+    } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
+    finally { setSaving(false) }
   }
 
-  const deleteProduct = async () => {
-    if (!product || !confirm('Delete this product? This cannot be undone.')) return
-    setDeleting(true)
+  const del = async () => {
+    if (!product || !confirm('Delete this product?')) return
     await fetch(`/api/products/${product.id}`, { method: 'DELETE' })
-    toast.success('Product deleted')
+    toast.success('Deleted')
     router.push('/admin/products')
   }
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <h2 className="font-semibold text-sm">{title}</h2>
-      </div>
-      <div className="p-6 flex flex-col gap-4">{children}</div>
-    </div>
-  )
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label className="text-xs font-semibold uppercase tracking-widest text-gray-400 block mb-1.5">{label}</label>
-      {children}
-    </div>
-  )
-
-  const Input = ({ k, type = 'text', placeholder = '' }: { k: StringKeys; type?: string; placeholder?: string }) => (
-    <input type={type} value={data[k] || ''} onChange={e => set(k, e.target.value)}
-      placeholder={placeholder}
-      className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10" />
-  )
-
-  const boolKeys: { k: BooleanKeys; label: string }[] = [
-    { k: 'is_active', label: 'Active (visible in store)' },
-    { k: 'is_featured', label: 'Featured product' },
-    { k: 'requires_shipping', label: 'Requires shipping' },
-    { k: 'taxable', label: 'Charge tax' },
-  ]
-
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-      {/* Left col */}
-      <div className="xl:col-span-2 flex flex-col gap-5">
-        <Section title="Product Info">
-          <Field label="Product Name *">
-            <input value={data.name} onChange={e => { set('name', e.target.value); if (!product) set('slug', autoSlug(e.target.value)) }}
-              placeholder="e.g. Premium Hoodie"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10" />
-          </Field>
-          <Field label="URL Slug">
-            <input value={data.slug} onChange={e => set('slug', e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none font-mono" />
-          </Field>
-          <Field label="Short Description">
-            <Input k="short_description" placeholder="Brief summary shown in product card" />
-          </Field>
-          <Field label="Full Description">
-            <textarea value={data.description} onChange={e => set('description', e.target.value)}
-              rows={5} placeholder="Detailed product description..."
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none resize-y" />
-          </Field>
-        </Section>
+    <AdminPage>
+      <AdminPageHeader
+        title={product ? product.name : 'New Product'}
+        action={
+          <div className="flex gap-2">
+            {product && (
+              <AdminButton variant="danger" size="sm" onClick={del} icon={<Trash2 size={12} />}>Delete</AdminButton>
+            )}
+            <AdminButton variant="primary" size="sm" onClick={save} loading={saving} icon={<Save size={12} />}>
+              {product ? 'Update' : 'Create'}
+            </AdminButton>
+          </div>
+        }
+      />
+      <AdminBackLink href="/admin/products" label="Products" />
+
+      <div className="flex flex-col gap-4">
+
+        {/* Basic Info */}
+        <AdminCard title="Product Info">
+          <div className="flex flex-col gap-4">
+            <AdminField label="Product Name" required>
+              <AdminInput value={data.name} onChange={v => { set('name', v); if (!product) set('slug', autoSlug(v)) }}
+                placeholder="e.g. Premium Hoodie" />
+            </AdminField>
+            <AdminField label="URL Slug">
+              <AdminInput value={data.slug} onChange={v => set('slug', v)} />
+            </AdminField>
+            <AdminField label="Short Description">
+              <AdminInput value={data.short_description} onChange={v => set('short_description', v)}
+                placeholder="Shown on product card" />
+            </AdminField>
+            <AdminField label="Full Description">
+              <AdminTextarea value={data.description} onChange={v => set('description', v)}
+                placeholder="Detailed product description..." rows={4} />
+            </AdminField>
+          </div>
+        </AdminCard>
 
         {/* Images */}
-        <Section title="Images">
-          <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${isDragActive ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>
-            <input {...getInputProps()} />
-            {uploading ? (
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Loader2 size={16} className="animate-spin" /> Uploading...
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2 text-gray-400">
-                <Upload size={24} />
-                <p className="text-sm">{isDragActive ? 'Drop images here' : 'Drag & drop or click to upload'}</p>
-                <p className="text-xs">PNG, JPG, WebP up to 10MB</p>
+        <AdminCard title="Images">
+          <div className="flex flex-col gap-3">
+            <div {...getRootProps()}
+              className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all"
+              style={{
+                borderColor: isDragActive ? palette.accent : palette.border,
+                background: isDragActive ? palette.accentDim : 'transparent'
+              }}>
+              <input {...getInputProps()} />
+              <Upload size={20} className="mx-auto mb-2" style={{ color: palette.textDim }} />
+              <p className="text-xs" style={{ color: palette.textMuted }}>
+                {uploading ? 'Uploading...' : isDragActive ? 'Drop here' : 'Drag & drop or click to upload'}
+              </p>
+              <p className="text-xs mt-1" style={{ color: palette.textDim }}>PNG, JPG, WebP</p>
+            </div>
+            {images.length > 0 && (
+              <div className="grid grid-cols-4 gap-2">
+                {images.map((img, i) => (
+                  <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden"
+                    style={{ background: palette.border }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.url} alt="" className="w-full h-full object-cover" />
+                    {i === 0 && (
+                      <span className="absolute bottom-1 left-1 text-xs px-1.5 py-0.5 rounded font-semibold"
+                        style={{ background: palette.accent, color: '#fff', fontSize: '9px' }}>Main</span>
+                    )}
+                    <button onClick={() => setImages(p => p.filter(x => x.id !== img.id))}
+                      className="absolute top-1 right-1 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ background: palette.danger }}>
+                      <X size={9} color="#fff" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-          {images.length > 0 && (
-            <div className="grid grid-cols-4 gap-3">
-              {images.map((img, i) => (
-                <div key={img.id} className="relative group aspect-square">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt={img.alt} className="w-full h-full object-cover rounded-lg" />
-                  {i === 0 && <span className="absolute bottom-1 left-1 text-xs bg-black/70 text-white px-1.5 py-0.5 rounded">Main</span>}
-                  <button onClick={() => removeImage(img.id)}
-                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X size={10} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </Section>
-
-        {/* Variants */}
-        <Section title="Variants (Size, Color, etc.)">
-          {variants.length === 0 ? (
-            <p className="text-sm text-gray-400">No variants. Single price product.</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {variants.map(v => (
-                <div key={v.id} className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg bg-gray-50">
-                  <GripVertical size={14} className="text-gray-300 cursor-grab" />
-                  <input value={v.name || ''} onChange={e => updateVariant(v.id!, 'name', e.target.value)}
-                    placeholder="e.g. Small / Red"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none" />
-                  <input type="number" value={v.price || ''} onChange={e => updateVariant(v.id!, 'price', parseFloat(e.target.value))}
-                    placeholder="Price"
-                    className="w-24 px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none" />
-                  <input value={v.sku || ''} onChange={e => updateVariant(v.id!, 'sku', e.target.value)}
-                    placeholder="SKU"
-                    className="w-24 px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none" />
-                  <button onClick={() => removeVariant(v.id!)} className="text-red-400 hover:text-red-600 p-1">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <button onClick={addVariant}
-            className="self-start flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800">
-            <Plus size={14} /> Add Variant
-          </button>
-        </Section>
-
-        {/* SEO */}
-        <Section title="SEO">
-          <Field label="SEO Title"><Input k="seo_title" placeholder="Defaults to product name" /></Field>
-          <Field label="SEO Description">
-            <textarea value={data.seo_description} onChange={e => set('seo_description', e.target.value)}
-              rows={3} placeholder="Brief description for search engines"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none resize-none" />
-          </Field>
-        </Section>
-      </div>
-
-      {/* Right col */}
-      <div className="flex flex-col gap-5">
-        {/* Status */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
-          <h2 className="font-semibold text-sm">Status</h2>
-          <div className="flex flex-col gap-3">
-            {boolKeys.map(item => (
-              <label key={item.k} className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={data[item.k]}
-                  onChange={e => set(item.k, e.target.checked)}
-                  className="w-4 h-4 rounded" />
-                <span className="text-sm">{item.label}</span>
-              </label>
-            ))}
-          </div>
-          <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
-            <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">Assign to Page</label>
-            <select value={data.page_id} onChange={e => set('page_id', e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none">
-              <option value="">No specific page</option>
-              {pages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
-            </select>
-          </div>
-        </div>
+        </AdminCard>
 
         {/* Pricing */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
-          <h2 className="font-semibold text-sm">Pricing</h2>
-          <Field label="Price *"><Input k="price" type="number" placeholder="0.00" /></Field>
-          <Field label="Compare at (original)"><Input k="compare_at_price" type="number" placeholder="0.00" /></Field>
-          <Field label="Cost per item"><Input k="cost_per_item" type="number" placeholder="0.00" /></Field>
-        </div>
+        <AdminCard title="Pricing">
+          <div className="flex flex-col gap-3">
+            <AdminField label="Price" required>
+              <AdminInput value={data.price} onChange={v => set('price', v)} type="number" placeholder="0.00" />
+            </AdminField>
+            <AdminField label="Compare at Price">
+              <AdminInput value={data.compare_at_price} onChange={v => set('compare_at_price', v)} type="number" placeholder="0.00" />
+            </AdminField>
+            <AdminField label="Cost per Item">
+              <AdminInput value={data.cost_per_item} onChange={v => set('cost_per_item', v)} type="number" placeholder="0.00" />
+            </AdminField>
+          </div>
+        </AdminCard>
 
         {/* Inventory */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
-          <h2 className="font-semibold text-sm">Inventory</h2>
-          <Field label="SKU"><Input k="sku" /></Field>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" checked={data.track_inventory} onChange={e => set('track_inventory', e.target.checked)} className="w-4 h-4 rounded" />
-            <span className="text-sm">Track inventory</span>
-          </label>
-          {data.track_inventory && (
-            <Field label="Quantity"><Input k="inventory_quantity" type="number" /></Field>
+        <AdminCard title="Inventory">
+          <div className="flex flex-col gap-3">
+            <AdminField label="SKU">
+              <AdminInput value={data.sku} onChange={v => set('sku', v)} />
+            </AdminField>
+            <AdminToggle label="Track inventory" checked={data.track_inventory} onChange={v => set('track_inventory', v)} />
+            {data.track_inventory && (
+              <AdminField label="Quantity">
+                <AdminInput value={data.inventory_quantity} onChange={v => set('inventory_quantity', v)} type="number" />
+              </AdminField>
+            )}
+          </div>
+        </AdminCard>
+
+        {/* Variants */}
+        <AdminCard title="Variants">
+          {variants.length === 0 ? (
+            <p className="text-xs py-2" style={{ color: palette.textMuted }}>No variants — single price product.</p>
+          ) : (
+            <div className="flex flex-col gap-2 mb-3">
+              {variants.map(v => (
+                <div key={v.id} className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: palette.bg }}>
+                  <GripVertical size={12} style={{ color: palette.textDim }} />
+                  <input value={v.name || ''} onChange={e => setVariants(p => p.map(x => x.id === v.id ? { ...x, name: e.target.value } : x))}
+                    placeholder="e.g. Small / Red"
+                    className="flex-1 px-2.5 py-1.5 rounded text-xs border outline-none"
+                    style={{ background: palette.surface, borderColor: palette.border, color: palette.text }} />
+                  <input type="number" value={v.price || ''} onChange={e => setVariants(p => p.map(x => x.id === v.id ? { ...x, price: parseFloat(e.target.value) } : x))}
+                    placeholder="Price" className="w-20 px-2.5 py-1.5 rounded text-xs border outline-none"
+                    style={{ background: palette.surface, borderColor: palette.border, color: palette.text }} />
+                  <button onClick={() => setVariants(p => p.filter(x => x.id !== v.id))}
+                    style={{ color: palette.danger }}><Trash2 size={12} /></button>
+                </div>
+              ))}
+            </div>
           )}
-        </div>
-
-        {/* Organization */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
-          <h2 className="font-semibold text-sm">Organization</h2>
-          <Field label="Category"><Input k="category" placeholder="e.g. Apparel, Accessories" /></Field>
-          <Field label="Tags (comma separated)"><Input k="tags" placeholder="hoodie, unisex, premium" /></Field>
-        </div>
-
-        {/* Save / Delete */}
-        <button onClick={save} disabled={saving}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm text-white hover:opacity-90 disabled:opacity-50"
-          style={{ background: '#000' }}>
-          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          {saving ? 'Saving...' : product ? 'Update Product' : 'Create Product'}
-        </button>
-
-        {product && (
-          <button onClick={deleteProduct} disabled={deleting}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50">
-            {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-            Delete Product
+          <button onClick={() => setVariants(p => [...p, { id: crypto.randomUUID(), name: '', is_active: true, sort_order: p.length, inventory_quantity: 0 }])}
+            className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
+            style={{ color: palette.accent }}>
+            <Plus size={12} /> Add Variant
           </button>
-        )}
+        </AdminCard>
+
+        {/* Status & Organization */}
+        <AdminCard title="Status">
+          <div className="flex flex-col gap-3">
+            <AdminToggle label="Active" description="Visible to customers" checked={data.is_active} onChange={v => set('is_active', v)} />
+            <AdminToggle label="Featured" checked={data.is_featured} onChange={v => set('is_featured', v)} />
+            <AdminToggle label="Requires Shipping" checked={data.requires_shipping} onChange={v => set('requires_shipping', v)} />
+            <AdminToggle label="Taxable" checked={data.taxable} onChange={v => set('taxable', v)} />
+            <AdminDivider />
+            <AdminField label="Assign to Page">
+              <AdminSelect value={data.page_id} onChange={v => set('page_id', v)}
+                options={[{ value: '', label: 'No specific page' }, ...pages.map(p => ({ value: p.id, label: p.title }))]} />
+            </AdminField>
+            <AdminField label="Category">
+              <AdminInput value={data.category} onChange={v => set('category', v)} placeholder="e.g. Apparel" />
+            </AdminField>
+            <AdminField label="Tags (comma separated)">
+              <AdminInput value={data.tags} onChange={v => set('tags', v)} placeholder="hoodie, unisex, premium" />
+            </AdminField>
+          </div>
+        </AdminCard>
+
+        {/* SEO */}
+        <AdminCard title="SEO">
+          <div className="flex flex-col gap-3">
+            <AdminField label="SEO Title">
+              <AdminInput value={data.seo_title} onChange={v => set('seo_title', v)} placeholder="Defaults to product name" />
+            </AdminField>
+            <AdminField label="SEO Description">
+              <AdminTextarea value={data.seo_description} onChange={v => set('seo_description', v)} rows={3} />
+            </AdminField>
+          </div>
+        </AdminCard>
+
+        {/* Save */}
+        <AdminButton variant="primary" size="lg" onClick={save} loading={saving} icon={<Save size={14} />}>
+          {product ? 'Update Product' : 'Create Product'}
+        </AdminButton>
+
       </div>
-    </div>
+    </AdminPage>
   )
 }

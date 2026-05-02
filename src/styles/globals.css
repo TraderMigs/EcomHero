@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@400;600&family=Syne:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,17 +10,11 @@
   --brand-accent: #ff4500;
   --font-display: 'Playfair Display', serif;
   --font-body: 'DM Sans', sans-serif;
-
   --brand-50: color-mix(in srgb, var(--brand-primary) 5%, white);
   --brand-100: color-mix(in srgb, var(--brand-primary) 10%, white);
-  --brand-200: color-mix(in srgb, var(--brand-primary) 20%, white);
-  --brand-300: color-mix(in srgb, var(--brand-primary) 35%, white);
-  --brand-400: color-mix(in srgb, var(--brand-primary) 55%, white);
   --brand-500: var(--brand-primary);
   --brand-600: color-mix(in srgb, var(--brand-primary) 85%, black);
   --brand-700: color-mix(in srgb, var(--brand-primary) 70%, black);
-  --brand-800: color-mix(in srgb, var(--brand-primary) 55%, black);
-  --brand-900: color-mix(in srgb, var(--brand-primary) 40%, black);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,26 +29,39 @@ body {
 
 h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
 
-/* ── Admin studio layout ─────────────────────────────────────── */
-/* Old fixed sidebar removed — replaced by AdminStudio flex layout */
+/* ── Admin studio dark theme ─────────────────────────────────── */
+.admin-studio {
+  background: #0f0f11;
+  color: #f4f4f5;
+  font-family: var(--font-body);
+}
 
-/* Toast */
-.toast-success { background: #0f0f0f !important; color: #fff !important; }
+.admin-studio * {
+  font-family: var(--font-body);
+}
+
+/* Scrollbar — thin dark */
+.admin-studio ::-webkit-scrollbar { width: 4px; height: 4px; }
+.admin-studio ::-webkit-scrollbar-track { background: transparent; }
+.admin-studio ::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 4px; }
+.admin-studio ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+/* ── Storefront ───────────────────────────────────────────────── */
+.store-root h1, .store-root h2, .store-root h3 {
+  font-family: var(--font-display);
+}
+
+/* Scrollbar — store */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #999; }
 
 /* Media studio canvas */
 .media-canvas {
   background: repeating-conic-gradient(#e0e0e0 0% 25%, #f5f5f5 0% 50%) 0 0 / 16px 16px;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #999; }
-
 @layer utilities {
   .text-balance { text-wrap: balance; }
-  .animate-delay-100 { animation-delay: 100ms; }
-  .animate-delay-200 { animation-delay: 200ms; }
-  .animate-delay-300 { animation-delay: 300ms; }
 }

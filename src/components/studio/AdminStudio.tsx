@@ -1,9 +1,9 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { StoreSettings, Page, Product } from '@/types'
 import AdminNav from './AdminNav'
 import StorePreview from './StorePreview'
-import { PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { PanelRightClose, PanelRightOpen, Monitor, Tablet, Smartphone } from 'lucide-react'
 
 interface Props {
   settings: StoreSettings | null
@@ -18,7 +18,6 @@ export default function AdminStudio({ settings, pages, products, children }: Pro
   const [liveSettings, setLiveSettings] = useState(settings)
   const [livePages, setLivePages] = useState(pages)
 
-  // Listen for preview update events dispatched by any admin form
   useEffect(() => {
     const handler = (e: CustomEvent) => {
       if (e.detail?.settings) setLiveSettings(e.detail.settings)
@@ -28,78 +27,96 @@ export default function AdminStudio({ settings, pages, products, children }: Pro
     return () => window.removeEventListener('ecomhero:preview-update', handler as EventListener)
   }, [])
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
+  const devices = [
+    { d: 'desktop' as const, Icon: Monitor, label: 'Desktop' },
+    { d: 'tablet' as const, Icon: Tablet, label: 'Tablet' },
+    { d: 'mobile' as const, Icon: Smartphone, label: 'Mobile' },
+  ]
 
-      {/* ── Fixed left nav (narrow icon+label sidebar) ─────────────────── */}
+  return (
+    <div className="admin-studio flex h-screen overflow-hidden" style={{ background: '#0f0f11' }}>
+
+      {/* Slim icon nav */}
       <AdminNav settings={liveSettings} />
 
-      {/* ── Main content area ─────────────────────────────────────────── */}
-      <div className={`flex flex-1 overflow-hidden transition-all duration-300`}>
+      {/* Admin panel */}
+      <div className={`flex flex-col overflow-hidden transition-all duration-300 ${previewOpen ? 'w-[400px] min-w-[360px]' : 'flex-1'}`}
+        style={{ background: '#0f0f11', borderRight: '1px solid #2a2a30' }}>
 
-        {/* Admin panel — scrollable */}
-        <div className={`flex flex-col overflow-hidden transition-all duration-300 ${previewOpen ? 'w-[420px] min-w-[380px]' : 'flex-1'}`}>
-          {/* Panel header */}
-          <div className="h-10 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Admin</span>
-            <button
-              onClick={() => setPreviewOpen(p => !p)}
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors"
-              title={previewOpen ? 'Hide preview' : 'Show preview'}>
-              {previewOpen ? <PanelRightClose size={14} /> : <PanelRightOpen size={14} />}
-              {previewOpen ? 'Hide preview' : 'Show preview'}
-            </button>
-          </div>
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto p-5">
-            {children}
-          </div>
+        {/* Panel top bar */}
+        <div className="h-10 flex items-center justify-between px-4 shrink-0"
+          style={{ borderBottom: '1px solid #2a2a30', background: '#18181b' }}>
+          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#52525b' }}>Admin</span>
+          <button onClick={() => setPreviewOpen(p => !p)}
+            className="flex items-center gap-1.5 text-xs transition-colors px-2 py-1 rounded"
+            style={{ color: '#71717a' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#f4f4f5')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#71717a')}>
+            {previewOpen
+              ? <><PanelRightClose size={13} /> Hide preview</>
+              : <><PanelRightOpen size={13} /> Show preview</>
+            }
+          </button>
         </div>
 
-        {/* ── Live preview pane ──────────────────────────────────────── */}
-        {previewOpen && (
-          <div className="flex-1 flex flex-col overflow-hidden border-l border-gray-200 bg-gray-200">
-            {/* Preview toolbar */}
-            <div className="h-10 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Live Preview</span>
-              {/* Device toggles */}
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-                {([
-                  { d: 'desktop', label: '🖥' },
-                  { d: 'tablet', label: '📱' },
-                  { d: 'mobile', label: '📲' },
-                ] as const).map(({ d, label }) => (
-                  <button key={d} onClick={() => setPreviewDevice(d)}
-                    className={`px-2.5 py-1 rounded text-xs transition-all ${previewDevice === d ? 'bg-white shadow font-semibold' : 'text-gray-400 hover:text-gray-600'}`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <a href="/" target="_blank" rel="noopener noreferrer"
-                className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
-                Open live ↗
-              </a>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {children}
+        </div>
+      </div>
+
+      {/* Live preview */}
+      {previewOpen && (
+        <div className="flex-1 flex flex-col overflow-hidden" style={{ background: '#0a0a0b' }}>
+
+          {/* Preview toolbar */}
+          <div className="h-10 flex items-center justify-between px-4 shrink-0"
+            style={{ borderBottom: '1px solid #2a2a30', background: '#18181b' }}>
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#52525b' }}>
+              Live Preview
+            </span>
+
+            {/* Device toggles */}
+            <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: '#0f0f11' }}>
+              {devices.map(({ d, Icon, label }) => (
+                <button key={d} onClick={() => setPreviewDevice(d)} title={label}
+                  className="flex items-center justify-center w-7 h-7 rounded transition-all"
+                  style={{
+                    background: previewDevice === d ? '#2a2a30' : 'transparent',
+                    color: previewDevice === d ? '#f4f4f5' : '#52525b',
+                  }}>
+                  <Icon size={13} />
+                </button>
+              ))}
             </div>
 
-            {/* Preview canvas */}
-            <div className="flex-1 overflow-auto flex justify-center p-4">
-              <div
-                className="bg-white shadow-xl overflow-hidden rounded-lg transition-all duration-300 h-full"
-                style={{
-                  width: previewDevice === 'desktop' ? '100%' :
-                         previewDevice === 'tablet' ? '768px' : '390px',
-                  maxWidth: '100%',
-                }}>
-                <StorePreview
-                  settings={liveSettings}
-                  pages={livePages}
-                  products={products}
-                />
-              </div>
+            <a href="/" target="_blank" rel="noopener noreferrer"
+              className="text-xs transition-colors"
+              style={{ color: '#52525b' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#f4f4f5')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#52525b')}>
+              Open live ↗
+            </a>
+          </div>
+
+          {/* Canvas */}
+          <div className="flex-1 overflow-auto flex justify-center p-5" style={{ background: '#0a0a0b' }}>
+            <div
+              className="bg-white overflow-hidden rounded-xl shadow-2xl h-full transition-all duration-300"
+              style={{
+                width: previewDevice === 'desktop' ? '100%' :
+                       previewDevice === 'tablet' ? '768px' : '390px',
+                maxWidth: '100%',
+              }}>
+              <StorePreview
+                settings={liveSettings}
+                pages={livePages}
+                products={products}
+              />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
