@@ -30,9 +30,26 @@ type SettingsFormData = {
   new_webhook_secret: string
 }
 
-type StringSettingsKeys = {
-  [K in keyof SettingsFormData]: SettingsFormData[K] extends string ? K : never
-}[keyof SettingsFormData]
+// Defined OUTSIDE main component — prevents re-mount on every keystroke
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <h2 className="font-semibold text-sm">{title}</h2>
+      </div>
+      <div className="p-6 flex flex-col gap-4">{children}</div>
+    </div>
+  )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-xs font-semibold uppercase tracking-widest text-gray-400 block mb-1.5">{label}</label>
+      {children}
+    </div>
+  )
+}
 
 export default function AdminSettingsForm({ settings }: Props) {
   const [data, setData] = useState<SettingsFormData>({
@@ -57,7 +74,9 @@ export default function AdminSettingsForm({ settings }: Props) {
     new_webhook_secret: '',
   })
   const [saving, setSaving] = useState(false)
-  const set = (k: keyof SettingsFormData, v: string | boolean) => setData(d => ({ ...d, [k]: v }))
+
+  const set = (k: keyof SettingsFormData, v: string | boolean) =>
+    setData(d => ({ ...d, [k]: v }))
 
   const save = async () => {
     setSaving(true)
@@ -73,41 +92,28 @@ export default function AdminSettingsForm({ settings }: Props) {
     finally { setSaving(false) }
   }
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <h2 className="font-semibold text-sm">{title}</h2>
-      </div>
-      <div className="p-6 flex flex-col gap-4">{children}</div>
-    </div>
-  )
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label className="text-xs font-semibold uppercase tracking-widest text-gray-400 block mb-1.5">{label}</label>
-      {children}
-    </div>
-  )
-
-  const Input = ({ k, type = 'text', placeholder = '' }: { k: StringSettingsKeys; type?: string; placeholder?: string }) => (
-    <input type={type} value={data[k] || ''} onChange={e => set(k, e.target.value)}
-      placeholder={placeholder}
-      className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10" />
-  )
+  const inputClass = "w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
 
   return (
     <div className="flex flex-col gap-5 max-w-3xl">
+
       <Section title="Store Info">
-        <Field label="Store Name"><Input k="store_name" /></Field>
-        <Field label="Tagline"><Input k="tagline" /></Field>
+        <Field label="Store Name">
+          <input value={data.store_name} onChange={e => set('store_name', e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Tagline">
+          <input value={data.tagline} onChange={e => set('tagline', e.target.value)} className={inputClass} />
+        </Field>
         <div className="flex items-center gap-3">
-          <input type="checkbox" checked={data.announcement_bar_active}
-            onChange={e => set('announcement_bar_active', e.target.checked)}
-            className="w-4 h-4 rounded" id="ann" />
+          <input type="checkbox" id="ann" checked={data.announcement_bar_active}
+            onChange={e => set('announcement_bar_active', e.target.checked)} className="w-4 h-4 rounded" />
           <label htmlFor="ann" className="text-sm font-medium">Show announcement bar</label>
         </div>
         {data.announcement_bar_active && (
-          <Field label="Announcement Text"><Input k="announcement_bar" placeholder="Free shipping on orders over $50!" /></Field>
+          <Field label="Announcement Text">
+            <input value={data.announcement_bar} onChange={e => set('announcement_bar', e.target.value)}
+              placeholder="Free shipping on orders over $50!" className={inputClass} />
+          </Field>
         )}
       </Section>
 
@@ -142,21 +148,47 @@ export default function AdminSettingsForm({ settings }: Props) {
       </Section>
 
       <Section title="Contact & Social">
-        <Field label="Contact Email"><Input k="contact_email" type="email" placeholder="hello@store.com" /></Field>
-        <Field label="Support Email"><Input k="support_email" type="email" /></Field>
-        <Field label="Instagram Handle"><Input k="social_instagram" placeholder="yourhandle (no @)" /></Field>
-        <Field label="TikTok Handle"><Input k="social_tiktok" placeholder="yourhandle" /></Field>
-        <Field label="Facebook Page"><Input k="social_facebook" /></Field>
+        <Field label="Contact Email">
+          <input type="email" value={data.contact_email} onChange={e => set('contact_email', e.target.value)}
+            placeholder="hello@store.com" className={inputClass} />
+        </Field>
+        <Field label="Support Email">
+          <input type="email" value={data.support_email} onChange={e => set('support_email', e.target.value)}
+            className={inputClass} />
+        </Field>
+        <Field label="Instagram Handle">
+          <input value={data.social_instagram} onChange={e => set('social_instagram', e.target.value)}
+            placeholder="yourhandle (no @)" className={inputClass} />
+        </Field>
+        <Field label="TikTok Handle">
+          <input value={data.social_tiktok} onChange={e => set('social_tiktok', e.target.value)}
+            placeholder="yourhandle" className={inputClass} />
+        </Field>
+        <Field label="Facebook Page">
+          <input value={data.social_facebook} onChange={e => set('social_facebook', e.target.value)}
+            className={inputClass} />
+        </Field>
       </Section>
 
       <Section title="SEO">
-        <Field label="Meta Title"><Input k="meta_title" /></Field>
-        <Field label="Meta Description"><Input k="meta_description" /></Field>
-        <Field label="Footer Text"><Input k="footer_text" placeholder="© 2026 My Store. All rights reserved." /></Field>
+        <Field label="Meta Title">
+          <input value={data.meta_title} onChange={e => set('meta_title', e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Meta Description">
+          <textarea value={data.meta_description} onChange={e => set('meta_description', e.target.value)}
+            rows={3} className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none resize-none" />
+        </Field>
+        <Field label="Footer Text">
+          <input value={data.footer_text} onChange={e => set('footer_text', e.target.value)}
+            placeholder="© 2026 My Store. All rights reserved." className={inputClass} />
+        </Field>
       </Section>
 
       <Section title="Stripe Payments">
-        <Field label="Publishable Key"><Input k="stripe_publishable_key" placeholder="pk_live_xxx" /></Field>
+        <Field label="Publishable Key">
+          <input value={data.stripe_publishable_key} onChange={e => set('stripe_publishable_key', e.target.value)}
+            placeholder="pk_live_xxx" className={inputClass} />
+        </Field>
         <Field label="New Secret Key (leave blank to keep current)">
           <input type="password" value={data.new_stripe_secret} onChange={e => set('new_stripe_secret', e.target.value)}
             placeholder="sk_live_xxx"
@@ -175,6 +207,7 @@ export default function AdminSettingsForm({ settings }: Props) {
         {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
         {saving ? 'Saving...' : 'Save Settings'}
       </button>
+
     </div>
   )
 }
