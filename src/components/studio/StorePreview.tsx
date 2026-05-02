@@ -185,7 +185,7 @@ function PreviewBlock({ block, products, colors }: {
   products: Product[]
   colors: { primary: string; secondary: string; accent: string }
 }) {
-  const data = block.data as Record<string, unknown>
+  const data = block.data as unknown as Record<string, unknown>
 
   switch (block.type) {
     case 'hero': return <PreviewHero data={data} colors={colors} />
