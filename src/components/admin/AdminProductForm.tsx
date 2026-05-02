@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react'
 import { Product, ProductVariant, ProductImage } from '@/types'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import { Upload, Plus, Trash2, X, GripVertical, Save, Loader2 } from 'lucide-react'
+import { Upload, Plus, Trash2, X, GripVertical, Save } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import {
   AdminPage, AdminPageHeader, AdminCard, AdminField, AdminInput,
@@ -19,12 +19,18 @@ type ProductFormData = {
   taxable: boolean; page_id: string; seo_title: string; seo_description: string
 }
 
-type StringKeys = { [K in keyof ProductFormData]: ProductFormData[K] extends string ? K : never }[keyof ProductFormData]
-type BoolKeys = { [K in keyof ProductFormData]: ProductFormData[K] extends boolean ? K : never }[keyof ProductFormData]
-
 interface Props {
   product: (Product & { product_variants?: ProductVariant[] }) | null
   pages: { id: string; title: string; slug: string }[]
+}
+
+// Fires updated product list to the live preview pane
+async function broadcastProductsUpdate() {
+  try {
+    const res = await fetch('/api/products')
+    const { products } = await res.json()
+    window.dispatchEvent(new CustomEvent('ecomhero:preview-update', { detail: { products } }))
+  } catch {}
 }
 
 export default function AdminProductForm({ product, pages }: Props) {
@@ -81,6 +87,7 @@ export default function AdminProductForm({ product, pages }: Props) {
       const result = await res.json()
       if (result.product) {
         toast.success(product ? 'Updated!' : 'Created!')
+        broadcastProductsUpdate() // ← update preview instantly
         if (!product) router.push(`/admin/products/${result.product.id}`)
       } else throw new Error(result.error)
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
@@ -91,6 +98,7 @@ export default function AdminProductForm({ product, pages }: Props) {
     if (!product || !confirm('Delete this product?')) return
     await fetch(`/api/products/${product.id}`, { method: 'DELETE' })
     toast.success('Deleted')
+    broadcastProductsUpdate() // ← update preview instantly
     router.push('/admin/products')
   }
 
@@ -112,8 +120,6 @@ export default function AdminProductForm({ product, pages }: Props) {
       <AdminBackLink href="/admin/products" label="Products" />
 
       <div className="flex flex-col gap-4">
-
-        {/* Basic Info */}
         <AdminCard title="Product Info">
           <div className="flex flex-col gap-4">
             <AdminField label="Product Name" required>
@@ -134,15 +140,11 @@ export default function AdminProductForm({ product, pages }: Props) {
           </div>
         </AdminCard>
 
-        {/* Images */}
         <AdminCard title="Images">
           <div className="flex flex-col gap-3">
             <div {...getRootProps()}
               className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all"
-              style={{
-                borderColor: isDragActive ? palette.accent : palette.border,
-                background: isDragActive ? palette.accentDim : 'transparent'
-              }}>
+              style={{ borderColor: isDragActive ? palette.accent : palette.border, background: isDragActive ? palette.accentDim : 'transparent' }}>
               <input {...getInputProps()} />
               <Upload size={20} className="mx-auto mb-2" style={{ color: palette.textDim }} />
               <p className="text-xs" style={{ color: palette.textMuted }}>
@@ -173,7 +175,6 @@ export default function AdminProductForm({ product, pages }: Props) {
           </div>
         </AdminCard>
 
-        {/* Pricing */}
         <AdminCard title="Pricing">
           <div className="flex flex-col gap-3">
             <AdminField label="Price" required>
@@ -188,7 +189,6 @@ export default function AdminProductForm({ product, pages }: Props) {
           </div>
         </AdminCard>
 
-        {/* Inventory */}
         <AdminCard title="Inventory">
           <div className="flex flex-col gap-3">
             <AdminField label="SKU">
@@ -203,7 +203,6 @@ export default function AdminProductForm({ product, pages }: Props) {
           </div>
         </AdminCard>
 
-        {/* Variants */}
         <AdminCard title="Variants">
           {variants.length === 0 ? (
             <p className="text-xs py-2" style={{ color: palette.textMuted }}>No variants — single price product.</p>
@@ -226,13 +225,12 @@ export default function AdminProductForm({ product, pages }: Props) {
             </div>
           )}
           <button onClick={() => setVariants(p => [...p, { id: crypto.randomUUID(), name: '', is_active: true, sort_order: p.length, inventory_quantity: 0 }])}
-            className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold"
             style={{ color: palette.accent }}>
             <Plus size={12} /> Add Variant
           </button>
         </AdminCard>
 
-        {/* Status & Organization */}
         <AdminCard title="Status">
           <div className="flex flex-col gap-3">
             <AdminToggle label="Active" description="Visible to customers" checked={data.is_active} onChange={v => set('is_active', v)} />
@@ -253,7 +251,6 @@ export default function AdminProductForm({ product, pages }: Props) {
           </div>
         </AdminCard>
 
-        {/* SEO */}
         <AdminCard title="SEO">
           <div className="flex flex-col gap-3">
             <AdminField label="SEO Title">
@@ -265,11 +262,9 @@ export default function AdminProductForm({ product, pages }: Props) {
           </div>
         </AdminCard>
 
-        {/* Save */}
         <AdminButton variant="primary" size="lg" onClick={save} loading={saving} icon={<Save size={14} />}>
           {product ? 'Update Product' : 'Create Product'}
         </AdminButton>
-
       </div>
     </AdminPage>
   )
