@@ -1,14 +1,11 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { BarChart2, TrendingUp, Eye, ShoppingCart } from 'lucide-react'
-import { AdminPage, AdminPageHeader, AdminStat, AdminCard, palette } from '@/components/ui/AdminUI'
+import { AdminPage, AdminPageHeader, AdminStat, AdminCard } from '@/components/ui/AdminUI'
+import { palette } from '@/components/ui/palette'
 
 export default async function AnalyticsPage() {
   const supabase = createServiceClient()
-  const [
-    { data: orders },
-    { data: events },
-    { count: subscriberCount },
-  ] = await Promise.all([
+  const [{ data: orders }, { data: events }, { count: subscriberCount }] = await Promise.all([
     supabase.from('orders').select('total,created_at,financial_status').order('created_at'),
     supabase.from('analytics_events').select('event_type,page_slug,created_at').order('created_at', { ascending: false }).limit(100),
     supabase.from('email_subscribers').select('*', { count: 'exact', head: true }).eq('is_active', true),
@@ -17,10 +14,9 @@ export default async function AnalyticsPage() {
   const paidOrders = orders?.filter(o => o.financial_status === 'paid') || []
   const totalRevenue = paidOrders.reduce((s, o) => s + (o.total || 0), 0)
   const avgOrder = paidOrders.length ? totalRevenue / paidOrders.length : 0
-
   const topPages = (events?.filter(e => e.event_type === 'page_view') || [])
     .reduce((acc: Record<string, number>, e) => { acc[e.page_slug || 'home'] = (acc[e.page_slug || 'home'] || 0) + 1; return acc }, {})
-  const topPagesSorted = Object.entries(topPages).sort(([,a],[,b]) => b - a).slice(0, 5)
+  const topPagesSorted = Object.entries(topPages).sort(([, a], [, b]) => b - a).slice(0, 5)
 
   return (
     <AdminPage>
@@ -31,7 +27,6 @@ export default async function AnalyticsPage() {
         <AdminStat label="Avg Order" value={`$${avgOrder.toFixed(2)}`} color="#f59e0b" icon={<BarChart2 size={15} />} />
         <AdminStat label="Subscribers" value={subscriberCount || 0} color="#06b6d4" icon={<Eye size={15} />} />
       </div>
-
       <AdminCard title="Top Pages">
         {topPagesSorted.length > 0 ? (
           <div className="flex flex-col gap-3">
