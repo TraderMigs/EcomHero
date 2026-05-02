@@ -1,10 +1,35 @@
 'use client'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { Loader2, CheckCircle, ExternalLink } from 'lucide-react'
+import { ExternalLink, CheckCircle } from 'lucide-react'
+import { palette } from '@/components/ui/palette'
+import {
+  AdminPage, AdminPageHeader, AdminField, AdminInput,
+  AdminButton, AdminToggle
+} from '@/components/ui/AdminUI'
 
 interface Props {
   settings: { pod_provider?: string; pod_shop_id?: string; stripe_publishable_key?: string } | null
+}
+
+const POD_OPTIONS = [
+  { value: 'none', label: 'None — I manage my own inventory', icon: '📦', desc: 'Manual fulfillment' },
+  { value: 'printful', label: 'Printful', icon: '🖨️', desc: 'Print-on-demand & fulfillment', docsUrl: 'https://www.printful.com/api' },
+  { value: 'printify', label: 'Printify', icon: '🎨', desc: '100+ print providers globally', docsUrl: 'https://developers.printify.com' },
+]
+
+function DarkCard({ children, title, subtitle }: { children: React.ReactNode; title?: string; subtitle?: string }) {
+  return (
+    <div className="rounded-xl border overflow-hidden" style={{ background: palette.surface, borderColor: palette.border }}>
+      {(title || subtitle) && (
+        <div className="px-5 py-3.5 border-b" style={{ borderColor: palette.borderLight }}>
+          {title && <p className="text-sm font-semibold" style={{ color: palette.text }}>{title}</p>}
+          {subtitle && <p className="text-xs mt-0.5" style={{ color: palette.textMuted }}>{subtitle}</p>}
+        </div>
+      )}
+      <div className="p-5">{children}</div>
+    </div>
+  )
 }
 
 export default function AdminIntegrationsClient({ settings }: Props) {
@@ -27,84 +52,76 @@ export default function AdminIntegrationsClient({ settings }: Props) {
     finally { setSaving(false) }
   }
 
-  const POD = [
-    { value: 'none', label: 'None', desc: 'I manage my own inventory', icon: '📦', color: '#6b7280' },
-    { value: 'printful', label: 'Printful', desc: 'Print-on-demand & fulfillment', icon: '🖨️', color: '#0062ff', docsUrl: 'https://www.printful.com/api' },
-    { value: 'printify', label: 'Printify', desc: '100+ print providers globally', icon: '🎨', color: '#00c5a2', docsUrl: 'https://developers.printify.com' },
-  ]
-
   return (
-    <div className="flex flex-col gap-5 max-w-3xl">
-      {/* POD */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-          <h2 className="font-semibold text-sm">Print-on-Demand Fulfillment</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Connect a POD provider to auto-fulfill orders</p>
-        </div>
-        <div className="p-6 flex flex-col gap-4">
-          <div className="grid grid-cols-3 gap-3">
-            {POD.map(p => (
-              <button key={p.value} onClick={() => setPodProvider(p.value)}
-                className={`relative p-4 border-2 rounded-xl text-left transition-all ${podProvider === p.value ? 'border-black' : 'border-gray-200 hover:border-gray-300'}`}>
-                <div className="text-2xl mb-2">{p.icon}</div>
-                <div className="font-semibold text-sm">{p.label}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{p.desc}</div>
-                {podProvider === p.value && (
-                  <CheckCircle size={16} className="absolute top-3 right-3 text-green-500" />
-                )}
-              </button>
-            ))}
-          </div>
+    <AdminPage>
+      <AdminPageHeader title="Integrations" subtitle="Connect fulfillment and payment providers" />
 
-          {podProvider !== 'none' && (
-            <div className="flex flex-col gap-3 pt-2 border-t border-gray-100 animate-fade-in">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium">Configure {podProvider === 'printful' ? 'Printful' : 'Printify'}</p>
-                {POD.find(p => p.value === podProvider)?.docsUrl && (
-                  <a href={POD.find(p => p.value === podProvider)?.docsUrl} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:underline flex items-center gap-1">
-                    Docs <ExternalLink size={10} />
-                  </a>
-                )}
+      {/* POD */}
+      <DarkCard title="Print-on-Demand Fulfillment" subtitle="Connect a POD provider to auto-fulfill orders">
+        <div className="flex flex-col gap-3 mb-5">
+          {POD_OPTIONS.map(p => (
+            <button key={p.value} onClick={() => setPodProvider(p.value)}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all"
+              style={{
+                background: podProvider === p.value ? palette.accentDim : 'transparent',
+                borderColor: podProvider === p.value ? palette.accent : palette.border,
+              }}>
+              <span className="text-xl shrink-0">{p.icon}</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold" style={{ color: palette.text }}>{p.label}</p>
+                <p className="text-xs mt-0.5" style={{ color: palette.textMuted }}>{p.desc}</p>
               </div>
-              <div>
-                <label className="text-xs uppercase tracking-widest text-gray-400 block mb-1">API Key</label>
-                <input type="password" value={podKey} onChange={e => setPodKey(e.target.value)}
-                  placeholder="Paste your API key (leave blank to keep current)"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none font-mono" />
-              </div>
-              {podProvider === 'printify' && (
-                <div>
-                  <label className="text-xs uppercase tracking-widest text-gray-400 block mb-1">Shop ID</label>
-                  <input value={podShopId} onChange={e => setPodShopId(e.target.value)}
-                    placeholder="Your Printify shop ID"
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none" />
-                </div>
+              {podProvider === p.value && <CheckCircle size={16} style={{ color: palette.accent, flexShrink: 0 }} />}
+            </button>
+          ))}
+        </div>
+
+        {podProvider !== 'none' && (
+          <div className="flex flex-col gap-3 pt-4 border-t mb-4" style={{ borderColor: palette.borderLight }}>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium" style={{ color: palette.text }}>
+                Configure {podProvider === 'printful' ? 'Printful' : 'Printify'}
+              </p>
+              {POD_OPTIONS.find(p => p.value === podProvider)?.docsUrl && (
+                <a href={POD_OPTIONS.find(p => p.value === podProvider)?.docsUrl}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs"
+                  style={{ color: palette.accent }}>
+                  Docs <ExternalLink size={10} />
+                </a>
               )}
             </div>
-          )}
+            <AdminField label="API Key" hint="Leave blank to keep current key">
+              <AdminInput value={podKey} onChange={setPodKey} type="password" placeholder="Paste your API key" />
+            </AdminField>
+            {podProvider === 'printify' && (
+              <AdminField label="Printify Shop ID">
+                <AdminInput value={podShopId} onChange={setPodShopId} placeholder="Your shop ID" />
+              </AdminField>
+            )}
+          </div>
+        )}
 
-          <button onClick={savePod} disabled={saving}
-            className="self-start flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white hover:opacity-90"
-            style={{ background: '#000' }}>
-            {saving ? <Loader2 size={14} className="animate-spin" /> : null} Save Integration
-          </button>
-        </div>
-      </div>
+        <AdminButton variant="primary" size="sm" onClick={savePod} loading={saving}>
+          Save Integration
+        </AdminButton>
+      </DarkCard>
 
       {/* Stripe status */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
-          <h2 className="font-semibold text-sm">Stripe Payments</h2>
-        </div>
-        <div className="p-6 flex items-center justify-between">
+      <DarkCard title="Stripe Payments">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${settings?.stripe_publishable_key ? 'bg-green-500' : 'bg-gray-300'}`} />
-            <span className="text-sm">{settings?.stripe_publishable_key ? 'Connected' : 'Not connected'}</span>
+            <div className="w-2.5 h-2.5 rounded-full"
+              style={{ background: settings?.stripe_publishable_key ? palette.success : palette.textDim }} />
+            <span className="text-sm" style={{ color: palette.text }}>
+              {settings?.stripe_publishable_key ? 'Connected' : 'Not connected'}
+            </span>
           </div>
-          <a href="/admin/settings" className="text-xs text-blue-600 hover:underline">Configure in Settings →</a>
+          <a href="/admin/settings" className="text-xs font-semibold" style={{ color: palette.accent }}>
+            Configure in Settings →
+          </a>
         </div>
-      </div>
-    </div>
+      </DarkCard>
+    </AdminPage>
   )
 }
