@@ -27,6 +27,12 @@ export default function StoreFront({ settings, page, products, navMenus }: Props
   const headerMenu = navMenus.find(m => m.location === 'header')?.items || []
   const footerMenu = navMenus.find(m => m.location === 'footer')?.items || []
 
+  // Supabase returns variants as `product_variants` — normalise to `variants`
+  const normalisedProducts: Product[] = products.map(p => ({
+    ...p,
+    variants: (p as unknown as Record<string, unknown>).product_variants as Product['variants'] ?? p.variants ?? [],
+  }))
+
   const addToCart = (item: typeof cartItems[0]) => {
     setCartItems(prev => {
       const key = `${item.product_id}-${item.variant_id || ''}`
@@ -77,7 +83,7 @@ export default function StoreFront({ settings, page, products, navMenus }: Props
         )}
         <section id="products" className="py-16 px-4 max-w-7xl mx-auto">
           <ProductGrid
-            products={products}
+            products={normalisedProducts}
             onProductClick={setSelectedProduct}
             onAddToCart={addToCart}
           />
