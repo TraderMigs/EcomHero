@@ -13,16 +13,32 @@ interface Props {
 
 export default function StoreHeader({ settings, navItems, cartCount, onCartOpen }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [logoError, setLogoError] = useState(false)
+
+  const showLogo = settings.logo_url && !logoError
 
   return (
-    <header className="sticky top-0 z-40 border-b" style={{ background: 'var(--brand-secondary)', borderColor: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' }}>
+    <header className="sticky top-0 z-40 border-b"
+      style={{ background: 'var(--brand-secondary)', borderColor: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' }}>
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <a href="/" className="flex items-center gap-3">
-          {settings.logo_url ? (
-            <Image src={settings.logo_url} alt={settings.store_name} width={120} height={40} className="object-contain max-h-10" />
+
+        {/* Logo / Store name */}
+        <a href="/" className="flex items-center gap-3 shrink-0">
+          {showLogo ? (
+            <div className="relative h-10 w-auto max-w-[180px]">
+              <Image
+                src={settings.logo_url!}
+                alt={settings.store_name}
+                width={180}
+                height={40}
+                className="object-contain h-10 w-auto max-w-[180px]"
+                onError={() => setLogoError(true)}
+                priority
+              />
+            </div>
           ) : (
-            <span className="text-xl font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--brand-primary)' }}>
+            <span className="text-xl font-bold"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--brand-primary)' }}>
               {settings.store_name}
             </span>
           )}
@@ -39,7 +55,7 @@ export default function StoreHeader({ settings, navItems, cartCount, onCartOpen 
           ))}
         </nav>
 
-        {/* Cart + Mobile Toggle */}
+        {/* Cart + Mobile toggle */}
         <div className="flex items-center gap-4">
           <button onClick={onCartOpen} className="relative p-2 hover:opacity-60 transition-opacity">
             <ShoppingBag size={22} style={{ color: 'var(--brand-primary)' }} />
@@ -56,12 +72,17 @@ export default function StoreHeader({ settings, navItems, cartCount, onCartOpen 
         </div>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile nav */}
       {mobileOpen && (
-        <div className="md:hidden border-t px-4 py-4 flex flex-col gap-4" style={{ borderColor: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', background: 'var(--brand-secondary)' }}>
+        <div className="md:hidden border-t px-4 py-4 flex flex-col gap-4"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+            background: 'var(--brand-secondary)',
+          }}>
           {navItems.map(item => (
             <a key={item.href} href={item.href}
-              className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}
+              className="text-sm font-medium"
+              style={{ color: 'var(--brand-primary)' }}
               onClick={() => setMobileOpen(false)}>
               {item.label}
             </a>
