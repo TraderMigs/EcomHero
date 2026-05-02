@@ -1,5 +1,6 @@
 'use client'
 import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Package, ShoppingCart, Users, FileText,
@@ -39,48 +40,59 @@ export default function AdminNav({ settings }: Props) {
   }
 
   return (
-    <aside className="w-14 bg-gray-900 flex flex-col items-center py-3 shrink-0 border-r border-gray-800">
-      {/* Store logo/initial */}
-      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-4 shrink-0">
-        <span className="text-white text-xs font-bold">
-          {settings?.store_name?.charAt(0) || 'E'}
+    <aside className="w-14 flex flex-col items-center py-3 shrink-0"
+      style={{ background: '#0f0f11', borderRight: '1px solid #2a2a30' }}>
+
+      {/* Store initial */}
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-4 shrink-0"
+        style={{ background: '#6366f120' }}>
+        <span className="text-xs font-bold" style={{ color: '#6366f1' }}>
+          {settings?.store_name?.charAt(0)?.toUpperCase() || 'E'}
         </span>
       </div>
 
-      {/* Nav icons */}
+      {/* Nav links — Next.js Link for instant SPA navigation */}
       <nav className="flex flex-col items-center gap-1 flex-1">
         {NAV.map(item => {
           const active = isActive(item.href, item.exact)
           return (
-            <a key={item.href} href={item.href}
+            <Link key={item.href} href={item.href}
               title={item.label}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all group relative ${
-                active ? 'bg-white text-gray-900' : 'text-gray-400 hover:bg-white/10 hover:text-white'
-              }`}>
+              prefetch={true}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all group relative"
+              style={{
+                background: active ? '#6366f1' : 'transparent',
+                color: active ? '#fff' : '#52525b',
+              }}>
               <item.icon size={16} />
               {/* Tooltip */}
-              <span className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+              <span className="absolute left-full ml-2 px-2 py-1 rounded text-xs whitespace-nowrap pointer-events-none z-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: '#18181b', color: '#f4f4f5', border: '1px solid #2a2a30' }}>
                 {item.label}
               </span>
-            </a>
+            </Link>
           )
         })}
       </nav>
 
-      {/* Bottom actions */}
+      {/* Bottom */}
       <div className="flex flex-col items-center gap-1">
         <a href="/" target="_blank" rel="noopener noreferrer"
           title="View Store"
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-all group relative">
+          className="w-9 h-9 rounded-lg flex items-center justify-center transition-all group relative"
+          style={{ color: '#52525b' }}>
           <ExternalLink size={15} />
-          <span className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
+          <span className="absolute left-full ml-2 px-2 py-1 rounded text-xs whitespace-nowrap pointer-events-none z-50 opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ background: '#18181b', color: '#f4f4f5', border: '1px solid #2a2a30' }}>
             View Store
           </span>
         </a>
         <button onClick={logout} title="Sign Out"
-          className="w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition-all group relative">
+          className="w-9 h-9 rounded-lg flex items-center justify-center transition-all group relative"
+          style={{ color: '#52525b' }}>
           <LogOut size={15} />
-          <span className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
+          <span className="absolute left-full ml-2 px-2 py-1 rounded text-xs whitespace-nowrap pointer-events-none z-50 opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ background: '#18181b', color: '#f4f4f5', border: '1px solid #2a2a30' }}>
             Sign Out
           </span>
         </button>
