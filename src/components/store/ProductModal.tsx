@@ -69,7 +69,7 @@ export default function ProductModal({ product, allProducts, onClose, onProductC
         {/* Wishlist button */}
         <div className="absolute top-4 right-14 z-20 p-2 bg-white rounded-full shadow-md">
           <WishlistButton productId={product.id} />
-
+        </div>
         <div className="grid md:grid-cols-2 gap-0">
           {/* Images */}
           <div className="relative aspect-square bg-gray-100">
