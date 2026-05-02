@@ -93,7 +93,9 @@ export default function StoreFront({ settings, page, products, navMenus }: Props
       {selectedProduct && (
         <ProductModal
           product={selectedProduct}
+          allProducts={normalisedProducts}
           onClose={() => setSelectedProduct(null)}
+          onProductClick={setSelectedProduct}
           onAddToCart={addToCart}
         />
       )}
