@@ -26,6 +26,10 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
+    // Logo and favicon URLs — only update if provided in payload
+    if (data.logo_url !== undefined) updateData.logo_url = data.logo_url || null
+    if (data.favicon_url !== undefined) updateData.favicon_url = data.favicon_url || null
+
     if (data.new_stripe_secret) {
       updateData.stripe_secret_key_enc = Buffer.from(data.new_stripe_secret).toString('base64')
     }
@@ -33,9 +37,12 @@ export async function POST(req: NextRequest) {
       updateData.stripe_webhook_secret_enc = Buffer.from(data.new_webhook_secret).toString('base64')
     }
 
-    const { error } = await supabase.from('store_settings').update(updateData).neq('id', '00000000-0000-0000-0000-000000000000')
-    if (error) throw error
+    const { error } = await supabase
+      .from('store_settings')
+      .update(updateData)
+      .neq('id', '00000000-0000-0000-0000-000000000000')
 
+    if (error) throw error
     return NextResponse.json({ success: true })
   } catch (e) {
     console.error('Settings error:', e)
