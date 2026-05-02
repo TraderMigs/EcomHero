@@ -1,8 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { Plus, FileText, Eye, EyeOff, Pencil } from 'lucide-react'
-import {
-  AdminPage, AdminPageHeader, AdminBadge, AdminEmpty, palette
-} from '@/components/ui/AdminUI'
+import { AdminPage, AdminPageHeader, AdminBadge, AdminEmpty } from '@/components/ui/AdminUI'
+import { palette } from '@/components/ui/palette'
 
 export default async function PagesAdminPage() {
   const supabase = createServiceClient()
@@ -15,7 +14,7 @@ export default async function PagesAdminPage() {
         subtitle={`${pages?.length || 0} pages · Click Edit to open the visual builder`}
         action={
           <a href="/admin/pages/new"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white hover:opacity-90"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white"
             style={{ background: palette.accent }}>
             <Plus size={13} /> New Page
           </a>
@@ -24,11 +23,10 @@ export default async function PagesAdminPage() {
       {pages && pages.length > 0 ? (
         <div className="flex flex-col gap-1.5">
           {pages.map(page => (
-            <div key={page.id}
-              className="flex items-center justify-between px-4 py-3 rounded-xl border transition-all group"
+            <div key={page.id} className="flex items-center justify-between px-4 py-3 rounded-xl border"
               style={{ background: palette.surface, borderColor: palette.border }}>
               <div className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center`}
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                   style={{ background: page.is_active ? '#22c55e15' : palette.border }}>
                   <FileText size={12} style={{ color: page.is_active ? '#22c55e' : palette.textDim }} />
                 </div>
@@ -46,15 +44,12 @@ export default async function PagesAdminPage() {
                   {page.is_active ? 'Active' : 'Draft'}
                 </AdminBadge>
                 <a href={`/admin/pages/${page.id}`}
-                  className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all"
+                  className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                   style={{ background: palette.accentDim, color: palette.accent }}>
                   <Pencil size={10} /> Edit
                 </a>
                 <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer"
-                  className="text-xs transition-colors"
-                  style={{ color: palette.textDim }}>
-                  View ↗
-                </a>
+                  className="text-xs" style={{ color: palette.textDim }}>View ↗</a>
               </div>
             </div>
           ))}
