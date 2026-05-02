@@ -1,33 +1,31 @@
 import { createClient } from '@/lib/supabase/server'
-import AdminSidebar from '@/components/admin/AdminSidebar'
+import AdminStudio from '@/components/studio/AdminStudio'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  let settings = null
-
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (user) {
-      const { data } = await supabase
-        .from('store_settings')
-        .select('store_name,logo_url,onboarding_complete')
-        .single()
-      settings = data
-    } else {
-      // No user — render children only (login/onboarding pages handle their own UI)
+    if (!user) {
       return <>{children}</>
     }
+
+    const [{ data: settings }, { data: pages }, { data: products }] = await Promise.all([
+      supabase.from('store_settings').select('*').single(),
+      supabase.from('pages').select('*').order('sort_order'),
+      supabase.from('products').select('id,name,slug,price,images,is_active,is_featured,sort_order').eq('is_active', true).order('sort_order').limit(12),
+    ])
+
+    return (
+      <AdminStudio
+        settings={settings}
+        pages={pages || []}
+        products={products || []}
+      >
+        {children}
+      </AdminStudio>
+    )
   } catch {
     return <>{children}</>
   }
-
-  return (
-    <div className="flex min-h-screen bg-gray-100">
-      <AdminSidebar settings={settings} />
-      <main className="admin-content flex-1 p-6 overflow-auto">
-        {children}
-      </main>
-    </div>
-  )
 }
