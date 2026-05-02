@@ -17,11 +17,13 @@ export default function AdminStudio({ settings, pages, products, children }: Pro
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [liveSettings, setLiveSettings] = useState(settings)
   const [livePages, setLivePages] = useState(pages)
+  const [liveProducts, setLiveProducts] = useState(products)
 
   useEffect(() => {
     const handler = (e: CustomEvent) => {
       if (e.detail?.settings) setLiveSettings(e.detail.settings)
       if (e.detail?.pages) setLivePages(e.detail.pages)
+      if (e.detail?.products) setLiveProducts(e.detail.products)
     }
     window.addEventListener('ecomhero:preview-update', handler as EventListener)
     return () => window.removeEventListener('ecomhero:preview-update', handler as EventListener)
@@ -111,7 +113,7 @@ export default function AdminStudio({ settings, pages, products, children }: Pro
               <StorePreview
                 settings={liveSettings}
                 pages={livePages}
-                products={products}
+                products={liveProducts}
               />
             </div>
           </div>
