@@ -225,9 +225,9 @@ function PreviewHero({ data, colors }: { data: Record<string, unknown>; colors: 
         <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${colors.primary}ee, ${colors.primary}88)` }} />
       )}
       <div className="relative z-10 px-8 py-12 max-w-2xl w-full" style={{ textAlign: (s(data.text_align) || 'center') as 'left' | 'center' | 'right' }}>
-        {data.heading && <h1 className="text-3xl font-bold mb-3 leading-tight" style={{ color: data.image_url ? '#fff' : colors.secondary }}>{s(data.heading)}</h1>}
-        {data.subheading && <p className="text-base mb-6 opacity-80" style={{ color: data.image_url ? '#fff' : colors.secondary }}>{s(data.subheading)}</p>}
-        {data.cta_text && (
+        {s(data.heading) && <h1 className="text-3xl font-bold mb-3 leading-tight" style={{ color: data.image_url ? '#fff' : colors.secondary }}>{s(data.heading)}</h1>}
+        {s(data.subheading) && <p className="text-base mb-6 opacity-80" style={{ color: data.image_url ? '#fff' : colors.secondary }}>{s(data.subheading)}</p>}
+        {s(data.cta_text) && (
           <span className="inline-block px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white rounded" style={{ background: colors.accent }}>
             {s(data.cta_text)}
           </span>
@@ -279,8 +279,8 @@ function PreviewProductGrid({ data, products, colors }: { data: Record<string, u
   const colClass = cols === 2 ? 'grid-cols-2' : cols === 4 ? 'grid-cols-4' : 'grid-cols-3'
   return (
     <div className="px-5 py-10">
-      {data.heading && <h2 className="text-2xl font-bold text-center mb-2" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
-      {data.subheading && <p className="text-center text-sm opacity-60 mb-6">{s(data.subheading)}</p>}
+      {s(data.heading) && <h2 className="text-2xl font-bold text-center mb-2" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
+      {s(data.subheading) && <p className="text-center text-sm opacity-60 mb-6">{s(data.subheading)}</p>}
       <div className={`grid ${colClass} gap-3`}>
         {display.map(p => (
           <div key={p.id} className="rounded-xl overflow-hidden border" style={{ borderColor: `${colors.primary}10` }}>
@@ -327,9 +327,9 @@ function PreviewImageText({ data, colors }: { data: Record<string, unknown>; col
             : <div className="w-full h-full flex items-center justify-center text-gray-200 text-3xl">🖼️</div>}
         </div>
         <div className="flex-1">
-          {data.heading && <h2 className="text-2xl font-bold mb-3" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
-          {data.body && <p className="text-sm opacity-70 leading-relaxed mb-4">{s(data.body)}</p>}
-          {data.cta_text && <span className="inline-block px-5 py-2 text-xs font-bold text-white rounded" style={{ background: colors.primary }}>{s(data.cta_text)}</span>}
+          {s(data.heading) && <h2 className="text-2xl font-bold mb-3" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
+          {s(data.body) && <p className="text-sm opacity-70 leading-relaxed mb-4">{s(data.body)}</p>}
+          {s(data.cta_text) && <span className="inline-block px-5 py-2 text-xs font-bold text-white rounded" style={{ background: colors.primary }}>{s(data.cta_text)}</span>}
         </div>
       </div>
     </div>
@@ -340,7 +340,7 @@ function PreviewTestimonials({ data, colors }: { data: Record<string, unknown>; 
   const items = (data.items as Record<string, unknown>[]) || []
   return (
     <div className="px-5 py-10 bg-gray-50">
-      {data.heading && <h2 className="text-2xl font-bold text-center mb-8" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
+      {s(data.heading) && <h2 className="text-2xl font-bold text-center mb-8" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
       <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
         {items.map((item, i) => (
           <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -360,7 +360,7 @@ function PreviewFaq({ data, colors }: { data: Record<string, unknown>; colors: {
   const items = (data.items as Record<string, unknown>[]) || []
   return (
     <div className="px-5 py-10 max-w-2xl mx-auto">
-      {data.heading && <h2 className="text-2xl font-bold text-center mb-6" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
+      {s(data.heading) && <h2 className="text-2xl font-bold text-center mb-6" style={{ color: colors.primary }}>{s(data.heading)}</h2>}
       <div className="flex flex-col gap-2">
         {items.map((item, i) => (
           <div key={i} className="border border-gray-100 rounded-xl overflow-hidden">
@@ -380,9 +380,9 @@ function PreviewFaq({ data, colors }: { data: Record<string, unknown>; colors: {
 function PreviewCtaBanner({ data }: { data: Record<string, unknown> }) {
   return (
     <div className="px-5 py-14 text-center" style={{ background: s(data.background_color) || '#000', color: s(data.text_color) || '#fff' }}>
-      {data.heading && <h2 className="text-2xl font-bold mb-2">{s(data.heading)}</h2>}
-      {data.subheading && <p className="text-sm opacity-80 mb-5">{s(data.subheading)}</p>}
-      {data.cta_text && <span className="inline-block px-6 py-2.5 text-xs font-bold border-2 border-current rounded">{s(data.cta_text)}</span>}
+      {s(data.heading) && <h2 className="text-2xl font-bold mb-2">{s(data.heading)}</h2>}
+      {s(data.subheading) && <p className="text-sm opacity-80 mb-5">{s(data.subheading)}</p>}
+      {s(data.cta_text) && <span className="inline-block px-6 py-2.5 text-xs font-bold border-2 border-current rounded">{s(data.cta_text)}</span>}
     </div>
   )
 }
@@ -401,7 +401,7 @@ function PreviewVideo({ data }: { data: Record<string, unknown> }) {
       <div className="aspect-video rounded-xl overflow-hidden shadow-lg">
         <iframe src={getEmbed(s(data.url))} className="w-full h-full" allowFullScreen title="video" />
       </div>
-      {data.caption && <p className="text-center text-xs opacity-50 mt-2">{s(data.caption)}</p>}
+      {s(data.caption) && <p className="text-center text-xs opacity-50 mt-2">{s(data.caption)}</p>}
     </div>
   )
 }
