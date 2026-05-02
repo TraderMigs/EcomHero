@@ -133,7 +133,7 @@ export default function ProductModal({ product, onClose, onAddToCart }: Props) {
                 <div className="flex flex-wrap gap-2">
                   {activeVariants.map(v => {
                     const isSelected = selectedVariant?.id === v.id
-                    const outOfStock = v.inventory_quantity === 0
+                    const outOfStock = product.track_inventory && v.inventory_quantity === 0
                     return (
                       <button key={v.id}
                         onClick={() => !outOfStock && selectVariant(v)}
