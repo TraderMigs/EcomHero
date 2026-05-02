@@ -3,17 +3,20 @@ import { useState } from 'react'
 import { Product, ProductVariant } from '@/types'
 import { X, ChevronLeft, ChevronRight, Plus, Minus, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
+import RelatedProducts from './RelatedProducts'
 
 interface Props {
   product: Product
+  allProducts: Product[]
   onClose: () => void
+  onProductClick: (p: Product) => void
   onAddToCart: (item: {
     product_id: string; variant_id?: string; name: string
     variant_name?: string; price: number; quantity: number; image_url?: string
   }) => void
 }
 
-export default function ProductModal({ product, onClose, onAddToCart }: Props) {
+export default function ProductModal({ product, allProducts, onClose, onProductClick, onAddToCart }: Props) {
   const activeVariants = (product.variants || []).filter(v => v.is_active)
   const hasVariants = activeVariants.length > 0
 
@@ -195,6 +198,14 @@ export default function ProductModal({ product, onClose, onAddToCart }: Props) {
               }
             </button>
           </div>
+        </div>
+        {/* Related products — clicking swaps to that product */}
+        <div className="px-8 pb-8">
+          <RelatedProducts
+            currentProduct={product}
+            allProducts={allProducts}
+            onProductClick={onProductClick}
+          />
         </div>
       </div>
     </div>
