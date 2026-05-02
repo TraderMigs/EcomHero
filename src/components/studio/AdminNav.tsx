@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, Package, ShoppingCart, Users, FileText,
-  Settings, Image, Tag, Zap, BarChart2, LogOut, ExternalLink
+  Settings, Image, Tag, Zap, BarChart2, LogOut, ExternalLink, Star
 } from 'lucide-react'
 import { StoreSettings } from '@/types'
 
@@ -16,6 +16,7 @@ const NAV = [
   { href: '/admin/pages', label: 'Pages', icon: FileText },
   { href: '/admin/media', label: 'Media', icon: Image },
   { href: '/admin/discounts', label: 'Discounts', icon: Tag },
+  { href: '/admin/reviews', label: 'Reviews', icon: Star },
   { href: '/admin/integrations', label: 'Integrations', icon: Zap },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart2 },
   { href: '/admin/settings', label: 'Settings', icon: Settings },

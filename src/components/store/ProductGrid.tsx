@@ -3,6 +3,8 @@ import { useState, useMemo } from 'react'
 import { Product } from '@/types'
 import Image from 'next/image'
 import { ShoppingBag, Eye, Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react'
+import WishlistButton from './WishlistButton'
+import SocialProofTicker from './SocialProofTicker'
 
 interface CartItem {
   product_id: string
@@ -292,6 +294,9 @@ export default function ProductGrid({ products, onProductClick, onAddToCart }: P
         </div>
       )}
 
+      {/* Social proof ticker */}
+      <SocialProofTicker products={filtered} />
+
       {/* Product grid */}
       {filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -318,6 +323,14 @@ export default function ProductGrid({ products, onProductClick, onAddToCart }: P
                       <ShoppingBag size={48} />
                     </div>
                   )}
+
+                  {/* Wishlist button — top right of image */}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={e => e.stopPropagation()}>
+                    <div className="p-1.5 rounded-full bg-white shadow-sm">
+                      <WishlistButton productId={product.id} />
+                    </div>
+                  </div>
 
                   {/* Badges */}
                   <div className="absolute top-3 left-3 flex flex-col gap-1.5">

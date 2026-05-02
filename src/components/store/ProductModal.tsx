@@ -4,6 +4,8 @@ import { Product, ProductVariant } from '@/types'
 import { X, ChevronLeft, ChevronRight, Plus, Minus, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import RelatedProducts from './RelatedProducts'
+import ProductReviews from './ProductReviews'
+import WishlistButton from './WishlistButton'
 
 interface Props {
   product: Product
@@ -64,6 +66,9 @@ export default function ProductModal({ product, allProducts, onClose, onProductC
           className="absolute top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow">
           <X size={18} />
         </button>
+        {/* Wishlist button */}
+        <div className="absolute top-4 right-14 z-20 p-2 bg-white rounded-full shadow-md">
+          <WishlistButton productId={product.id} />
 
         <div className="grid md:grid-cols-2 gap-0">
           {/* Images */}
@@ -200,12 +205,16 @@ export default function ProductModal({ product, allProducts, onClose, onProductC
           </div>
         </div>
         {/* Related products — clicking swaps to that product */}
-        <div className="px-8 pb-8">
+        <div className="px-8 pb-4">
           <RelatedProducts
             currentProduct={product}
             allProducts={allProducts}
             onProductClick={onProductClick}
           />
+        </div>
+        {/* Reviews */}
+        <div className="px-8 pb-8">
+          <ProductReviews productId={product.id} productName={product.name} />
         </div>
       </div>
     </div>
