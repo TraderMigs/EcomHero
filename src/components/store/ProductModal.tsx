@@ -1,25 +1,39 @@
 'use client'
 import { useState } from 'react'
 import { Product, ProductVariant } from '@/types'
-import { X, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Plus, Minus, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 
 interface Props {
   product: Product
   onClose: () => void
-  onAddToCart: (item: { product_id: string; variant_id?: string; name: string; variant_name?: string; price: number; quantity: number; image_url?: string }) => void
+  onAddToCart: (item: {
+    product_id: string; variant_id?: string; name: string
+    variant_name?: string; price: number; quantity: number; image_url?: string
+  }) => void
 }
 
 export default function ProductModal({ product, onClose, onAddToCart }: Props) {
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(product.variants?.[0] || null)
+  const activeVariants = (product.variants || []).filter(v => v.is_active)
+  const hasVariants = activeVariants.length > 0
+
+  // If variants exist, require explicit selection — start with null so buyer must choose
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    hasVariants ? null : null
+  )
   const [quantity, setQuantity] = useState(1)
   const [imgIndex, setImgIndex] = useState(0)
+  const [noVariantError, setNoVariantError] = useState(false)
 
   const images = product.images || []
   const price = selectedVariant?.price ?? product.price
   const comparePrice = selectedVariant?.compare_at_price ?? product.compare_at_price
 
   const handleAdd = () => {
+    if (hasVariants && !selectedVariant) {
+      setNoVariantError(true)
+      return
+    }
     onAddToCart({
       product_id: product.id,
       variant_id: selectedVariant?.id,
@@ -32,14 +46,22 @@ export default function ProductModal({ product, onClose, onAddToCart }: Props) {
     onClose()
   }
 
+  const selectVariant = (v: ProductVariant) => {
+    setSelectedVariant(v)
+    setNoVariantError(false)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative z-10 bg-white rounded-xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in"
+      <div
+        className="relative z-10 bg-white rounded-xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow">
+        <button onClick={onClose}
+          className="absolute top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow">
           <X size={18} />
         </button>
+
         <div className="grid md:grid-cols-2 gap-0">
           {/* Images */}
           <div className="relative aspect-square bg-gray-100">
@@ -59,8 +81,8 @@ export default function ProductModal({ product, onClose, onAddToCart }: Props) {
                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
                       {images.map((_, i) => (
                         <button key={i} onClick={() => setImgIndex(i)}
-                          className={`w-2 h-2 rounded-full transition-all ${i === imgIndex ? 'w-4' : 'bg-white/60'}`}
-                          style={{ background: i === imgIndex ? 'var(--brand-accent)' : '' }} />
+                          className="w-2 h-2 rounded-full transition-all"
+                          style={{ background: i === imgIndex ? 'var(--brand-accent)' : 'rgba(255,255,255,0.6)', width: i === imgIndex ? '16px' : '8px' }} />
                       ))}
                     </div>
                   </>
@@ -74,33 +96,71 @@ export default function ProductModal({ product, onClose, onAddToCart }: Props) {
           {/* Details */}
           <div className="p-8 flex flex-col gap-5">
             <div>
-              <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>{product.name}</h2>
+              <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                {product.name}
+              </h2>
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl font-bold">${price.toFixed(2)}</span>
                 {comparePrice && comparePrice > price && (
                   <span className="text-sm opacity-40 line-through">${comparePrice.toFixed(2)}</span>
                 )}
               </div>
+              {/* Show selected variant under price */}
+              {selectedVariant && (
+                <p className="text-sm mt-1 font-medium" style={{ color: 'var(--brand-accent)' }}>
+                  {selectedVariant.name}
+                </p>
+              )}
             </div>
 
             {product.description && (
               <p className="text-sm opacity-70 leading-relaxed">{product.description}</p>
             )}
 
-            {/* Variants */}
-            {product.variants && product.variants.length > 0 && (
+            {/* Variant selector */}
+            {hasVariants && (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest mb-3 opacity-60">Options</p>
-                <div className="flex flex-wrap gap-2">
-                  {product.variants.map(v => (
-                    <button key={v.id}
-                      onClick={() => setSelectedVariant(v)}
-                      className={`px-4 py-2 text-sm border rounded transition-all ${selectedVariant?.id === v.id ? 'border-transparent text-white' : 'hover:border-gray-400'}`}
-                      style={selectedVariant?.id === v.id ? { background: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' } : {}}>
-                      {v.name}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold uppercase tracking-widest opacity-60">
+                    Options
+                  </p>
+                  {!selectedVariant && (
+                    <p className="text-xs font-medium" style={{ color: 'var(--brand-accent)' }}>
+                      Please select one
+                    </p>
+                  )}
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {activeVariants.map(v => {
+                    const isSelected = selectedVariant?.id === v.id
+                    const outOfStock = v.inventory_quantity === 0
+                    return (
+                      <button key={v.id}
+                        onClick={() => !outOfStock && selectVariant(v)}
+                        disabled={outOfStock}
+                        className={`px-4 py-2 text-sm border-2 rounded-lg transition-all relative ${outOfStock ? 'opacity-40 cursor-not-allowed line-through' : 'hover:border-current'}`}
+                        style={{
+                          background: isSelected ? 'var(--brand-primary)' : 'transparent',
+                          borderColor: isSelected ? 'var(--brand-primary)' : noVariantError ? 'var(--brand-accent)' : '#e5e7eb',
+                          color: isSelected ? 'var(--brand-secondary)' : 'var(--brand-primary)',
+                        }}>
+                        {v.name}
+                        {v.price && v.price !== product.price && (
+                          <span className="ml-1 text-xs opacity-70">+${(v.price - product.price).toFixed(0)}</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Error state if they try to add without selecting */}
+                {noVariantError && (
+                  <div className="flex items-center gap-1.5 mt-2 text-xs font-medium"
+                    style={{ color: 'var(--brand-accent)' }}>
+                    <AlertCircle size={13} />
+                    Please select an option before adding to cart
+                  </div>
+                )}
               </div>
             )}
 
@@ -120,10 +180,19 @@ export default function ProductModal({ product, onClose, onAddToCart }: Props) {
               </div>
             </div>
 
-            <button onClick={handleAdd}
-              className="w-full py-4 font-semibold text-sm tracking-widest uppercase rounded transition-all hover:opacity-90 text-white mt-auto"
-              style={{ background: 'var(--brand-primary)' }}>
-              Add to Cart — ${(price * quantity).toFixed(2)}
+            {/* Add to cart */}
+            <button
+              onClick={handleAdd}
+              className="w-full py-4 font-semibold text-sm tracking-widest uppercase rounded transition-all mt-auto"
+              style={{
+                background: hasVariants && !selectedVariant ? '#e5e7eb' : 'var(--brand-primary)',
+                color: hasVariants && !selectedVariant ? '#9ca3af' : 'var(--brand-secondary)',
+                cursor: hasVariants && !selectedVariant ? 'not-allowed' : 'pointer',
+              }}>
+              {hasVariants && !selectedVariant
+                ? 'Select an option'
+                : `Add to Cart — $${(price * quantity).toFixed(2)}`
+              }
             </button>
           </div>
         </div>
